@@ -1,5 +1,6 @@
 # SpringSocialMedia
-This is a Spring Boot sample social media application which initially uses version 1.5.19.RELEASE but, will gradually get updated to the latest Spring Boot version 2.1.3.RELEASE.
+This is a Spring Boot sample social media application which initially uses version 1.5.19.RELEASE but, 
+will gradually get updated to the latest Spring Boot version and Project Reactor.
 
 ##Technologies Used:
 1. Spring Boot.
