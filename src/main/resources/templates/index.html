@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <title>Social Media</title>
     <link rel="stylesheet" href="/main.css" />
+    <script src="webjars/requirejs/2.3.6/require.js" />
 </head>
 <body>
     <h3 th:if="${#vars['flash.message']}" th:text="${#vars['flash.message']}" class="flash"></h3>
@@ -41,5 +42,24 @@
         <p><input type="submit" value="Upload" /></p>
     </form>
 </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        (function () {
+                window.require(['webjars/stompjs/2.3.3/lib/stomp', 'webjars/sockjs-client/1.3.0/dist/sockjs'], function (stomp, SockJs) {
+                    var redrawCurrentPage = function (message) {
+                        console.log(message);
+                        window.location = /*[[@{/(size=${page.size},page=${page.number})}]]*/'';
+                    };
+
+                    var socket = SockJs('/pictureMessages');
+                    var  stompClient = Stomp.over(socket);
+                    stompClient.connect({/*optional headers*/}, function (frame) {
+                        stompClient.subscribe('/topic/newPicture', redrawCurrentPage);
+                        stompClient.subscribe('/topic/deletePicture', redrawCurrentPage);
+                    })
+                })
+            })();
+        /*]]>*/
+    </script>
 </body>
 </html>

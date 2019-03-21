@@ -9,8 +9,12 @@ import org.springframework.boot.actuate.metrics.repository.InMemoryMetricReposit
 import org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.FileSystemUtils;
+import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -19,7 +23,29 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @Configuration
-public class PictureConfiguration {
+@EnableWebSocketMessageBroker
+public class PictureConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
+
+    @Bean
+    public InMemoryMetricRepository metricRepository(){
+        return new InMemoryMetricRepository();
+    }
+
+    @Bean
+    public PublicMetrics publicMetrics(){
+        return new MetricReaderPublicMetrics(metricRepository());
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/pictureMessages").withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.enableSimpleBroker("/topic");
+        registry.setApplicationDestinationPrefixes("/app");
+    }
 
     @Bean
     //@Profile("dev")
@@ -44,15 +70,5 @@ public class PictureConfiguration {
                   .stream().filter(entry -> entry.getValue().isFullMatch())
                   .forEach(entry -> System.out.println(entry.getKey() + " => " + entry.getValue().isFullMatch()));
         };
-    }
-
-    @Bean
-    public InMemoryMetricRepository metricRepository(){
-        return new InMemoryMetricRepository();
-    }
-
-    @Bean
-    public PublicMetrics publicMetrics(){
-        return new MetricReaderPublicMetrics(metricRepository());
     }
 }

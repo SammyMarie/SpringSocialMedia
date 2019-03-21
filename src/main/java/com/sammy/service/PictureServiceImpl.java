@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,14 +34,17 @@ public class PictureServiceImpl implements PictureService {
     private final CounterService counterService;
     private final GaugeService gaugeService;
     private final InMemoryMetricRepository metricRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public PictureServiceImpl(PictureRepository repository, ResourceLoader resourceLoader, CounterService counterService, GaugeService gaugeService, InMemoryMetricRepository metricRepository) {
+    public PictureServiceImpl(PictureRepository repository, ResourceLoader resourceLoader, CounterService counterService,
+                              GaugeService gaugeService, InMemoryMetricRepository metricRepository, SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
         this.resourceLoader = resourceLoader;
         this.counterService = counterService;
         this.gaugeService = gaugeService;
         this.metricRepository = metricRepository;
+        this.messagingTemplate = messagingTemplate;
 
         this.counterService.reset("files.uploaded");
         this.gaugeService.submit("files.uploaded.lastBytes", 0);
@@ -67,6 +71,7 @@ public class PictureServiceImpl implements PictureService {
             counterService.increment("files.uploaded");
             gaugeService.submit("files.uploaded.lastBytes", file.getSize());
             metricRepository.increment(new Delta<Number>("files.uploaded.totalBytes", file.getSize()));
+            messagingTemplate.convertAndSend("/topic/newPicture", file.getOriginalFilename());
         }
     }
 
@@ -75,5 +80,6 @@ public class PictureServiceImpl implements PictureService {
         final PictureBusinessDTO byName = repository.findByName(filename);
         repository.delete(byName);
         Files.deleteIfExists(Paths.get(UPLOAD_ROOT, filename));
+        messagingTemplate.convertAndSend("/topic/deletePicture", filename);
     }
 }
