@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thmyeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Social Media</title>
+    <link rel="stylesheet" href="/main.css" />
+</head>
+<body>
+    <h3 th:if="${#vars['flash.message']}" th:text="${#vars['flash.message']}" class="flash"></h3>
+
+<div>
+    <h3 th:text="${page.number + 1} + ' of ' + ${page.totalPages}"/>
+    <h4 th:text="${page.size} + ' items(s) per page'"/>
+    <table>
+        <thead>
+        <tr>
+            <th>Id</th><th>Name</th><th>Picture</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="picture : ${page.content}">
+            <td th:text="${picture.id}"/>
+            <td th:text="${picture.name}"/>
+            <td><a th:href="@{'/images/' + ${picture.name} + '/raw'}"><img th:src="@{'/images/' + ${picture.name} + '/raw'}" class="thumbnail"/></a></td>
+            <td>
+                <form th:method="delete" th:action="@{'/images/' + ${picture.name}}">
+                    <input type="submit" value="Delete"/>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <ul>
+        <li th:if="${prev}"><a th:href="@{/(size=${prev.pageSize},page=${prev.pageNumber})}">Previous</a></li>
+        <li th:if="${next}"><a th:href="@{/(size=${next.pageSize},page=${next.pageNumber})}">Next</a></li>
+    </ul>
+
+    <form method="post" enctype="multipart/form-data" action="/images">
+        <p><input type="file" name="file" /></p>
+        <p><input type="submit" value="Upload" /></p>
+    </form>
+</div>
+</body>
+</html>
